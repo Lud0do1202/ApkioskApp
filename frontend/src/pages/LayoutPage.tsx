@@ -1,20 +1,11 @@
 import React from "react";
-import {Link, Outlet} from "react-router-dom";
+import {Outlet} from "react-router-dom";
+import Navbar from "../components/Navbar";
 
-const LayoutPage : React.FC = () => {
+const LayoutPage: React.FC = () => {
     return (<>
-        <nav>
-            <ul>
-                <li>
-                    <Link to="/dashboard">Home</Link>
-                </li>
-                <li>
-                    <Link to="/tasks">Blogs</Link>
-                </li>
-            </ul>
-        </nav>
-
-        <Outlet />
+        <Navbar/>
+        <Outlet/>
     </>)
 }
 
