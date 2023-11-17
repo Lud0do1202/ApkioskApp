@@ -13,7 +13,7 @@ const Navbar: React.FC = () => {
      * @param link One of the const link
      */
     function setColorLink(link: string): string {
-        return activeLink === link ? "secondary" : "white";
+        return activeLink === link || ("/" === activeLink && link === dashboardLink) ? "secondary" : "white";
     }
 
     return (<Box sx={{flexGrow: 1}}>
