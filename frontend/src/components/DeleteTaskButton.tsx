@@ -4,6 +4,7 @@ import { User } from '../models/User'
 import { Delete } from '@mui/icons-material'
 
 const DeleteTaskButton: React.FC<{ user: User }> = ({ user }) => {
+	// Modals var
 	const [open, setOpen] = useState(false)
 	const handleOpen = () => setOpen(true)
 	const handleClose = () => setOpen(false)

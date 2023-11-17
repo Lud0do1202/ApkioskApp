@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import {
+	Avatar,
 	Box,
+	Pagination,
 	Table,
 	TableBody,
 	TableCell,
 	TableContainer,
+	TableFooter,
 	TableHead,
 	TableRow,
 	Typography,
-	Avatar,
-	TableFooter,
-	Pagination,
 } from '@mui/material'
 import TableHeadCell from './TableHeadCell'
 import { Task } from '../models/Task'
@@ -19,8 +19,11 @@ import { User } from '../models/User'
 import ChipStatus from './ChipStatus'
 import EditTaskButton from './EditTaskButton'
 import DeleteTaskButton from './DeleteTaskButton'
+import NoTasksAvailable from './NoTasksAvailable'
+import TaskTableContainer from './TaskTableContainer'
 
 const TasksTable: React.FC = () => {
+    // MOCK USERS
 	const USERS: User[] = [
 		{
 			id: 1,
@@ -37,6 +40,7 @@ const TasksTable: React.FC = () => {
 		},
 	]
 
+    // MOCK TASKS
 	const TASKS_MOCK: Task[] = [
 		{
 			id: 1,
@@ -160,77 +164,23 @@ const TasksTable: React.FC = () => {
 		},
 	]
 
+    // The tasks
 	const [tasks, setTasks] = useState<Task[] | undefined>(undefined)
 
+    // INIT just first loading
 	useEffect(() => {
+        // Simulate api request
 		setTimeout(() => {
 			setTasks(TASKS_MOCK)
 		}, 1500)
-	})
-
-	const [page, setPage] = useState(1)
-	const nbRowsShown = 7
-
-	const updateTasksUI: (event: React.ChangeEvent<unknown>, page: number) => void = (event, page): void => {
-		setPage(page)
-	}
+	}, [])
 
 	return (
 		<Box mt={3} mx={5}>
 			{tasks === undefined ? (
 				<Typography>LOADING</Typography>
 			) : (
-				<TableContainer>
-					<Table sx={{ minWidth: 800 }} aria-label="tasks table">
-						<TableHead>
-							<TableRow>
-								<TableHeadCell text={'Libellé'} width={'60%'} />
-								<TableHeadCell text={'Attribution'} />
-								<TableHeadCell text={'Status'} />
-								<TableHeadCell text={'Actions'} />
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{tasks.slice((page - 1) * nbRowsShown, (page - 1) * nbRowsShown + nbRowsShown).map((task, index, array) => (
-								<TableRow key={task.id}>
-									<TableCell align={'center'}>{task.label}</TableCell>
-									<TableCell align={'center'}>
-										<Box display={'flex'} justifyContent={'center'}>
-											<Avatar
-												component={'span'}
-												alt={`${task.user.lastname} ${task.user.firstname}`}
-												src={task.user.avatar}
-											/>
-										</Box>
-									</TableCell>
-									<TableCell align={'center'}>
-										<ChipStatus status={task.status}></ChipStatus>
-									</TableCell>
-									<TableCell align={'center'}>
-										<EditTaskButton user={task.user} />
-										<DeleteTaskButton user={task.user} />
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-						<TableFooter>
-							<TableRow>
-								<TableCell style={{borderBottom: "none"}} colSpan={4}>
-									<Pagination
-										className="table-pagination"
-										count={Math.ceil(tasks.length / nbRowsShown)}
-										variant="outlined"
-										color="primary"
-										hidePrevButton
-										hideNextButton
-										page={page}
-										onChange={updateTasksUI}
-									/>
-								</TableCell>
-							</TableRow>
-						</TableFooter>
-					</Table>
-				</TableContainer>
+				<>{tasks.length === 0 ? <NoTasksAvailable /> : <TaskTableContainer tasks={tasks}></TaskTableContainer>}</>
 			)}
 		</Box>
 	)

@@ -4,6 +4,7 @@ import { User } from '../models/User'
 import { Edit } from '@mui/icons-material'
 
 const EditTaskButton: React.FC<{ user: User }> = ({ user }) => {
+	// Modals var
 	const [open, setOpen] = useState(false)
 	const handleOpen = () => setOpen(true)
 	const handleClose = () => setOpen(false)
