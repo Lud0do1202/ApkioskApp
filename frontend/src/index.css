@@ -1,29 +1,29 @@
 body {
-  margin: 0;
-  font-family: 'Sulphur Point', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    font-family: 'Sulphur Point', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
 /* <Modal> <Container/>  */
 .MuiModal-root .MuiContainer-root {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 /* <Pagination> <ul> */
 .MuiPagination-root .MuiPagination-ul {
-  justify-content: end;
+    justify-content: end;
 }
 
 /* <TableBody> <TableRow (:last-child)> <TableCell> */
 .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root {
-  border-bottom-width: 3px;
+    border-bottom-width: 3px;
 }
