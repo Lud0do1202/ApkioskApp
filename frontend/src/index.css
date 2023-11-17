@@ -10,10 +10,20 @@ code {
     monospace;
 }
 
-/* <Modal> <Container/> </Modal>  */
+/* <Modal> <Container/>  */
 .MuiModal-root .MuiContainer-root {
   position: absolute;
   top: 10%;
   left: 50%;
   transform: translateX(-50%);
+}
+
+/* <Pagination> <ul> */
+.MuiPagination-root .MuiPagination-ul {
+  justify-content: end;
+}
+
+/* <TableBody> <TableRow (:last-child)> <TableCell> */
+.MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root {
+  border-bottom-width: 3px;
 }
