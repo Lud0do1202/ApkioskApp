@@ -3,7 +3,7 @@ import {User} from './User'
 
 export interface Task {
     id: number
-    user: User
+    user: User | null
     label: string
     status: TaskStatus
 }
