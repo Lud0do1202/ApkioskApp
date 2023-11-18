@@ -7,34 +7,52 @@ import Loader from './LoaderPage'
 import {TasksMock} from '../MOCK/TasksMock'
 import {CrudTasks} from '../models/CrudTasks'
 import AddTaskButton from './AddTaskButton'
+import SearchTasks from './SearchTasks'
 
 const TasksTable: React.FC = () => {
     // The tasks
     const [tasks, setTasks] = useState<Task[] | undefined>(undefined)
+    const [tasksUI, setTasksUI] = useState<Task[]>([])
 
     // INIT
     useEffect(() => {
         // Simulate api request
         setTimeout(() => {
             setTasks(TasksMock)
-        }, 1500)
+            setTasksUI(filterTasks(TasksMock, ''))
+        }, 100)
     }, [])
 
     // Crud tasks
     const crudTask: CrudTasks = (type, task) => {
+        let newTasks: Task[] = []
         switch (type) {
             case 'create':
-                setTasks((prevTasks) => prevTasks?.concat(task))
+                newTasks = tasks!.concat(task)
                 break
             case 'update':
-                setTasks((prevTasks) => prevTasks?.map((prevTask) => (prevTask.id === task.id ? task : prevTask)))
+                newTasks = tasks!.map((t) => (t.id === task.id ? task : t))
                 break
             case 'delete':
-                setTasks((prevTasks) => prevTasks?.filter((prevTask) => prevTask.id !== task.id))
+                newTasks = tasks!.filter((t) => t.id !== task.id)
                 break
             default:
-                console.error('Method CRUD not allowed')
+                throw new Error('Method CRUD not allowed')
         }
+        setTasks(newTasks)
+        setTasksUI(filterTasks(newTasks, search))
+    }
+
+    // Filter
+    const filterTasks = (tasks: Task[], label: string) => {
+        return tasks.filter((task) => task.label.includes(label)).sort((t1, t2) => t1.label.localeCompare(t2.label))
+    }
+
+    // Search bar
+    const [search, setSearch] = useState('')
+    const handleSearchChange = (value: string) => {
+        setSearch(value)
+        setTasksUI(filterTasks(tasks!, value))
     }
 
     return (
@@ -46,13 +64,16 @@ const TasksTable: React.FC = () => {
                     {/* Top bar of table */}
                     <Box display={'flex'} justifyContent={'space-between'}>
                         <AddTaskButton task={undefined} crudTasks={crudTask}/>
+                        <Box>
+                            <SearchTasks handleSearchChange={handleSearchChange}/>
+                        </Box>
                     </Box>
 
                     {/* Table */}
                     {tasks.length === 0 ? (
                         <NoTasksAvailable/>
                     ) : (
-                        <TaskTableContainer tasks={tasks} crudTasks={crudTask}></TaskTableContainer>
+                        <TaskTableContainer tasks={tasksUI} crudTasks={crudTask}></TaskTableContainer>
                     )}
                 </>
             )}
