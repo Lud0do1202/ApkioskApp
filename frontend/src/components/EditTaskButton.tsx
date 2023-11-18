@@ -1,58 +1,96 @@
 import React, { useState } from 'react'
-import {
-	Box,
-	Button,
-	colors,
-	Container,
-	IconButton,
-	MenuItem,
-	Modal,
-	Paper,
-	TextField,
-} from '@mui/material'
+import { Box, Button, colors, Container, IconButton, MenuItem, Modal, Paper, TextField } from '@mui/material'
 import { Edit } from '@mui/icons-material'
 import { Task } from '../models/Task'
 import { User } from '../models/User'
 import { USERS } from '../MOCK/UsersMock'
-import { allTaskStatus } from '../models/TaskStatus'
+import { allTaskStatus, TaskStatus } from '../models/TaskStatus'
 import ChipStatus from './ChipStatus'
 import LoaderComponent from './LoaderComponent'
 import ModalHeader from './ModalHeader'
 
-const EditTaskButton: React.FC<{ task: Task; editTask: (task: Task) => void }> = ({ task, editTask }) => {
+const EditTaskButton: React.FC<{ task: Task | undefined; editTask: (task: Task) => void }> = ({ task, editTask }) => {
 	// Users
 	const [users, setUsers] = useState<User[] | undefined>(undefined)
 
 	// Modals var
 	const [open, setOpen] = useState(false)
 	const handleOpen = () => {
+		// Open modal
 		setOpen(true)
+
+		// Fetch users
 		setTimeout(() => {
 			setUsers(USERS)
 		}, 500)
 	}
 	const handleClose = () => {
+		// Reset all users (save memory)
 		setUsers(undefined)
+
+		// Reset form
+		setLabel(task?.label)
+		setStatus(task?.status)
+		setUserId(task?.user?.id)
+
+		setErrorLabel(false)
+		setErrorLabelHelper(undefined)
+		setErrorStatus(false)
+		setErrorStatusHelper(undefined)
+
+		// Close modal
 		setOpen(false)
 	}
 
 	// Form
-	const [label, setLabel] = useState(task.label)
-	const [status, setStatus] = useState(task.status)
-	const [userId, setUserId] = useState(task.user?.id || 0)
+	const [label, setLabel] = useState<string | undefined>(task?.label)
+	const [status, setStatus] = useState<TaskStatus | undefined>(task?.status)
+	const [userId, setUserId] = useState<number | undefined>(task?.user?.id)
+
+	const [errorLabel, setErrorLabel] = useState(false)
+	const [errorLabelHelper, setErrorLabelHelper] = useState<string | undefined>(undefined)
+	const [errorStatus, setErrorStatus] = useState(false)
+	const [errorStatusHelper, setErrorStatusHelper] = useState<string | undefined>(undefined)
 
 	// Submit
 	const handleSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
-		// Prevent default submit
+		// Prevent default submit event
 		event.preventDefault()
 
+		// Check label
+		if (label === undefined || label.trim() === '') {
+			setErrorLabel(true)
+			setErrorLabelHelper('Champ obligatoire')
+		} else if (label.length > 255) {
+			setErrorLabel(true)
+			setErrorLabelHelper('Max 255 caractères')
+		} else {
+			setErrorLabel(false)
+			setErrorLabelHelper(undefined)
+		}
+
+		// Check status
+		if (status === undefined) {
+			setErrorStatus(true)
+			setErrorStatusHelper('Champ obligatoire')
+		} else {
+			setErrorStatus(false)
+			setErrorStatusHelper(undefined)
+		}
+
+		// STOP if error
+		if (!errorLabel || !errorStatus) return
+
 		// Update the task
-		task.label = label
-		task.status = status
-		task.user = users!.find((user) => user.id === userId) ?? null
+		const editedTask: Task = {
+			id: userId ?? 0,
+			label: label!,
+			status: status!,
+			user: users!.find((user) => user.id === userId) ?? null,
+		}
 
 		// Update the task for the table and the DB
-		editTask(task)
+		editTask(editedTask)
 
 		// Close modal
 		handleClose()
@@ -72,14 +110,16 @@ const EditTaskButton: React.FC<{ task: Task; editTask: (task: Task) => void }> =
 						) : (
 							<>
 								{/* FORM */}
-								<form onSubmit={handleSubmit}>
+								<form onSubmit={handleSubmit} noValidate>
 									{/* Header */}
-									<ModalHeader text='Nouvelle Tâche' handleClose={handleClose} />
+									<ModalHeader text="Modification d'une tâche" handleClose={handleClose} />
 
 									{/* Body */}
 									<Box display={'flex'} flexDirection={'column'} gap={3}>
 										<TextField
 											id="label"
+											error={errorLabel}
+											helperText={errorLabelHelper}
 											label="Libellé de la tâche"
 											required
 											defaultValue={label}
@@ -91,10 +131,10 @@ const EditTaskButton: React.FC<{ task: Task; editTask: (task: Task) => void }> =
 											id="attribution"
 											select
 											label="Attribution"
-											defaultValue={task.user?.id ?? 0}
+											defaultValue={userId}
 											size="small"
 											onChange={(e) => setUserId(Number.parseInt(e.target.value))}>
-											<MenuItem key={0} value={0}>
+											<MenuItem key={0} value={undefined}>
 												No Attribution
 											</MenuItem>
 											{users?.map((user) => (
@@ -107,8 +147,11 @@ const EditTaskButton: React.FC<{ task: Task; editTask: (task: Task) => void }> =
 										<TextField
 											id="status"
 											select
+											error={errorStatus}
+											helperText={errorStatusHelper}
 											label="Status"
-											defaultValue={task.status}
+											required
+											defaultValue={task?.status}
 											size="small"
 											onChange={(e) => setStatus(Number.parseInt(e.target.value))}>
 											{allTaskStatus.map((s) => (
