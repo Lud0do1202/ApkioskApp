@@ -135,7 +135,7 @@ const ModalEditTask = React.forwardRef<HandleOpenModalRef, { task: Task | undefi
                                             helperText={errorLabel}
                                             label="Libellé de la tâche"
                                             required
-                                            defaultValue={label}
+                                            value={label ?? ''}
                                             onChange={(e) => setLabel(e.target.value)}
                                             size="small"
                                         />
@@ -144,8 +144,8 @@ const ModalEditTask = React.forwardRef<HandleOpenModalRef, { task: Task | undefi
                                             id="attribution"
                                             select
                                             label="Attribution"
-                                            defaultValue={userId}
                                             size="small"
+                                            value={userId ?? ''}
                                             onChange={(e) => setUserId(Number.parseInt(e.target.value))}>
                                             <MenuItem key={0} value={0}>
                                                 -
@@ -164,8 +164,8 @@ const ModalEditTask = React.forwardRef<HandleOpenModalRef, { task: Task | undefi
                                             helperText={errorStatus}
                                             label="Status"
                                             required
-                                            defaultValue={task?.status}
                                             size="small"
+                                            value={task?.status ?? ''}
                                             onChange={(e) => setStatus(Number.parseInt(e.target.value))}>
                                             {allTaskStatus.map((s) => (
                                                 <MenuItem key={s} value={s}>

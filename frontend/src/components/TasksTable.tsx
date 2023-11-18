@@ -8,6 +8,9 @@ import {TasksMock} from '../MOCK/TasksMock'
 import {CrudTasks} from '../models/CrudTasks'
 import AddTaskButton from './AddTaskButton'
 import SearchTasks from './SearchTasks'
+import FilterTasks from './FilterTasks'
+import {TaskStatus} from '../models/TaskStatus'
+import ExcelTasks from './ExcelTasks'
 
 const TasksTable: React.FC = () => {
     // The tasks
@@ -19,7 +22,7 @@ const TasksTable: React.FC = () => {
         // Simulate api request
         setTimeout(() => {
             setTasks(TasksMock)
-            setTasksUI(filterTasks(TasksMock, ''))
+            setTasksUI(filterTasks(TasksMock))
         }, 100)
     }, [])
 
@@ -40,19 +43,45 @@ const TasksTable: React.FC = () => {
                 throw new Error('Method CRUD not allowed')
         }
         setTasks(newTasks)
-        setTasksUI(filterTasks(newTasks, search))
+        setTasksUI(filterTasks(newTasks, filterSearch, filterUserId, filterStatus))
     }
 
     // Filter
-    const filterTasks = (tasks: Task[], label: string) => {
-        return tasks.filter((task) => task.label.includes(label)).sort((t1, t2) => t1.label.localeCompare(t2.label))
+    const filterTasks = (tasks: Task[], label?: string, userId?: number, status?: TaskStatus) => {
+        let tasksFiltered: Task[]
+
+        // Search
+        tasksFiltered = label === undefined ? tasks : tasks.filter((task) => task.label.includes(label))
+
+        // UserId
+        tasksFiltered =
+            userId === undefined
+                ? tasksFiltered
+                : tasksFiltered.filter((task) => (userId === 0 && task.user === null) || task.user?.id === userId)
+
+        // UserId
+        tasksFiltered = status === undefined ? tasksFiltered : tasksFiltered.filter((task) => task.status === status)
+
+        // Order
+        tasksFiltered = tasksFiltered.sort((t1, t2) => t1.label.localeCompare(t2.label))
+
+        return tasksFiltered
     }
 
     // Search bar
-    const [search, setSearch] = useState('')
-    const handleSearchChange = (value: string) => {
-        setSearch(value)
-        setTasksUI(filterTasks(tasks!, value))
+    const [filterSearch, setFilterSearch] = useState<string | undefined>(undefined)
+    const handleSearchChange = (search: string) => {
+        setFilterSearch(search)
+        setTasksUI(filterTasks(tasks!, search, filterUserId, filterStatus))
+    }
+
+    // User + Status
+    const [filterUserId, setFilterUserId] = useState<number | undefined>(undefined)
+    const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
+    const handleFilterChange = (userId?: number, status?: TaskStatus) => {
+        setFilterUserId(userId)
+        setFilterStatus(status)
+        setTasksUI(filterTasks(tasks!, filterSearch, userId, status))
     }
 
     return (
@@ -64,8 +93,10 @@ const TasksTable: React.FC = () => {
                     {/* Top bar of table */}
                     <Box display={'flex'} justifyContent={'space-between'}>
                         <AddTaskButton task={undefined} crudTasks={crudTask}/>
-                        <Box>
+                        <Box display={'flex'} gap={2}>
                             <SearchTasks handleSearchChange={handleSearchChange}/>
+                            <ExcelTasks tasks={tasks}/>
+                            <FilterTasks handleFilterChange={handleFilterChange}/>
                         </Box>
                     </Box>
 
