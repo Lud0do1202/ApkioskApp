@@ -18,12 +18,9 @@ import EditTaskButton from './EditTaskButton'
 import TableHeadCell from './TableHeadCell'
 import {Task} from '../models/Task'
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule'
+import {CrudTasks} from '../models/CrudTasks'
 
-const TaskTableContainer: React.FC<{
-    tasks: Task[]
-    editTask: (task: Task) => void
-    deleteTask: (taskId: number) => void
-}> = ({tasks, editTask, deleteTask}) => {
+const TaskTableContainer: React.FC<{ tasks: Task[]; crudTasks: CrudTasks }> = ({tasks, crudTasks}) => {
     // Current page of the table
     const [page, setPage] = useState(1)
 
@@ -62,8 +59,8 @@ const TaskTableContainer: React.FC<{
                                 <ChipStatus status={task.status}></ChipStatus>
                             </TableCell>
                             <TableCell align={'center'}>
-                                <EditTaskButton task={task} editTask={editTask}/>
-                                <DeleteTaskButton task={task} deleteTask={deleteTask}/>
+                                <EditTaskButton task={task} crudTasks={crudTasks}/>
+                                <DeleteTaskButton task={task} crudTasks={crudTasks}/>
                             </TableCell>
                         </TableRow>
                     ))}
