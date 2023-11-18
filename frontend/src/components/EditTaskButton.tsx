@@ -2,27 +2,24 @@ import React, { useState } from 'react'
 import {
 	Box,
 	Button,
-	CircularProgress,
+	colors,
 	Container,
 	IconButton,
 	MenuItem,
 	Modal,
 	Paper,
 	TextField,
-	Typography,
-	colors,
 } from '@mui/material'
 import { Edit } from '@mui/icons-material'
 import { Task } from '../models/Task'
-import CloseIcon from '@mui/icons-material/Close'
 import { User } from '../models/User'
 import { USERS } from '../MOCK/UsersMock'
 import { allTaskStatus } from '../models/TaskStatus'
 import ChipStatus from './ChipStatus'
-import Loader from './LoaderPage'
 import LoaderComponent from './LoaderComponent'
+import ModalHeader from './ModalHeader'
 
-const EditTaskButton: React.FC<{ task: Task; updateTask: (task: Task) => void }> = ({ task, updateTask }) => {
+const EditTaskButton: React.FC<{ task: Task; editTask: (task: Task) => void }> = ({ task, editTask }) => {
 	// Users
 	const [users, setUsers] = useState<User[] | undefined>(undefined)
 
@@ -55,7 +52,7 @@ const EditTaskButton: React.FC<{ task: Task; updateTask: (task: Task) => void }>
 		task.user = users!.find((user) => user.id === userId) ?? null
 
 		// Update the task for the table and the DB
-		updateTask(task)
+		editTask(task)
 
 		// Close modal
 		handleClose()
@@ -77,20 +74,7 @@ const EditTaskButton: React.FC<{ task: Task; updateTask: (task: Task) => void }>
 								{/* FORM */}
 								<form onSubmit={handleSubmit}>
 									{/* Header */}
-									<Box
-										display={'flex'}
-										justifyContent={'space-between'}
-										alignItems={'center'}
-										pb={2}
-										mb={4}
-										sx={{ borderBottom: '3px solid ' + colors.grey[400] }}>
-										<Typography variant="h6" color={'secondary'} fontWeight={'bold'}>
-											Nouvelle tâche
-										</Typography>
-										<IconButton aria-label="delete" onClick={handleClose}>
-											<CloseIcon fontSize="large" />
-										</IconButton>
-									</Box>
+									<ModalHeader text='Nouvelle Tâche' handleClose={handleClose} />
 
 									{/* Body */}
 									<Box display={'flex'} flexDirection={'column'} gap={3}>
