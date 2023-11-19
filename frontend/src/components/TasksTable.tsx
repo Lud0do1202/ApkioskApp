@@ -4,13 +4,14 @@ import {Task} from '../models/Task'
 import NoTasksAvailable from './NoTasksAvailable'
 import TaskTableContainer from './TaskTableContainer'
 import Loader from './LoaderPage'
-import {TasksMock} from '../MOCK/TasksMock'
-import {CrudTasks} from '../models/CrudTasks'
 import AddTaskButton from './AddTaskButton'
 import SearchTasks from './SearchTasks'
 import FilterTasks from './FilterTasks'
 import {TaskStatus} from '../models/TaskStatus'
 import ExcelTasks from './ExcelTasks'
+import {TaskEdit} from '../models/TaskEdit'
+import {Consumer, Consumer2} from '../models/Consumer'
+import {User} from '../models/User'
 
 const TasksTable: React.FC = () => {
     // The tasks
@@ -19,31 +20,61 @@ const TasksTable: React.FC = () => {
 
     // INIT
     useEffect(() => {
-        // Simulate api request
-        setTimeout(() => {
-            setTasks(TasksMock)
-            setTasksUI(filterTasks(TasksMock))
-        }, 100)
+        fetch('https://localhost:7278/api/Tasks', {method: 'GET'})
+            .then((res) => res.json())
+            .then((tasksApi: Task[]) => {
+                setTasks(tasksApi)
+                setTasksUI(filterTasks(tasksApi))
+            })
+            .catch((e) => console.error(e))
     }, [])
 
-    // Crud tasks
-    const crudTask: CrudTasks = (type, task) => {
-        let newTasks: Task[] = []
-        switch (type) {
-            case 'create':
-                newTasks = tasks!.concat(task)
-                break
-            case 'update':
-                newTasks = tasks!.map((t) => (t.id === task.id ? task : t))
-                break
-            case 'delete':
-                newTasks = tasks!.filter((t) => t.id !== task.id)
-                break
-            default:
-                throw new Error('Method CRUD not allowed')
-        }
-        setTasks(newTasks)
-        setTasksUI(filterTasks(newTasks, filterSearch, filterUserId, filterStatus))
+    // Create task
+    const handleCreateTask: Consumer<TaskEdit> = (taskEdit) => {
+        fetch('https://localhost:7278/api/Tasks', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(taskEdit),
+        })
+            .then((res) => res.json())
+            .then((tasksInserted: Task) => {
+                const newTasksArray = tasks!.concat(tasksInserted)
+                setTasks(newTasksArray)
+                setTasksUI(filterTasks(newTasksArray, filterSearch, filterUserId, filterStatus))
+            })
+            .catch((e) => console.error(e))
+    }
+
+    // Update task
+    const handleUpdateTask: Consumer2<TaskEdit, User | null> = (taskEdit, user) => {
+        fetch(`https://localhost:7278/api/Tasks/${taskEdit.id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(taskEdit),
+        })
+            .then(() => {
+                const taskUpdated: Task = {
+                    id: taskEdit.id,
+                    label: taskEdit.label,
+                    status: taskEdit.status,
+                    user: user,
+                }
+                const newTasksArray = tasks!.map((task) => (task.id === taskUpdated.id ? taskUpdated : task))
+                setTasks(newTasksArray)
+                setTasksUI(filterTasks(newTasksArray, filterSearch, filterUserId, filterStatus))
+            })
+            .catch((e) => console.error(e))
+    }
+
+    // Delete task
+    const handleDeleteTask: Consumer<number> = (taskId) => {
+        fetch(`https://localhost:7278/api/Tasks/${taskId}`, {method: 'DELETE'})
+            .then(() => {
+                const newTasksArray = tasks!.filter((task) => task.id !== taskId)
+                setTasks(newTasksArray)
+                setTasksUI(filterTasks(newTasksArray, filterSearch, filterUserId, filterStatus))
+            })
+            .catch((e) => console.error(e))
     }
 
     // Filter
@@ -92,10 +123,10 @@ const TasksTable: React.FC = () => {
                 <>
                     {/* Top bar of table */}
                     <Box display={'flex'} justifyContent={'space-between'}>
-                        <AddTaskButton task={undefined} crudTasks={crudTask}/>
+                        <AddTaskButton handleCreateTask={handleCreateTask}/>
                         <Box display={'flex'} gap={2}>
                             <SearchTasks handleSearchChange={handleSearchChange}/>
-                            <ExcelTasks tasks={tasks}/>
+                            <ExcelTasks search={filterSearch} status={filterStatus} userId={filterUserId}/>
                             <FilterTasks handleFilterChange={handleFilterChange}/>
                         </Box>
                     </Box>
@@ -104,7 +135,11 @@ const TasksTable: React.FC = () => {
                     {tasks.length === 0 ? (
                         <NoTasksAvailable/>
                     ) : (
-                        <TaskTableContainer tasks={tasksUI} crudTasks={crudTask}></TaskTableContainer>
+                        <TaskTableContainer
+                            tasks={tasksUI}
+                            handleUpdateTask={handleUpdateTask}
+                            handleDeleteTask={handleDeleteTask}
+                        />
                     )}
                 </>
             )}

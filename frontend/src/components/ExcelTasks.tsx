@@ -1,19 +1,62 @@
 import React from 'react'
-import {colors, createSvgIcon, IconButton} from '@mui/material'
-import {Task} from '../models/Task'
+import { Box, colors, createSvgIcon, IconButton, Popover } from '@mui/material'
+import { TaskStatus } from '../models/TaskStatus'
+import LoaderComponent from './LoaderComponent'
 
-const ExcelTasks: React.FC<{ tasks: Task[] }> = ({tasks}) => {
-    const ExcelIcon = createSvgIcon(
-        <svg
-            version="1.0"
-            xmlns="http://www.w3.org/2000/svg"
-            width="512.000000pt"
-            height="512.000000pt"
-            viewBox="0 0 512.000000 512.000000"
-            preserveAspectRatio="xMidYMid meet">
-            <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
-                <path
-                    d="M2665 4948 c-27 -5 -615 -115 -1305 -244 -1342 -251 -1296 -241
+const ExcelTasks: React.FC<{ search?: string; status?: TaskStatus; userId?: number }> = ({
+	search,
+	status,
+	userId,
+}) => {
+	// Anchors
+	const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null)
+
+	// Click excel
+	const handleExcel = (event: React.MouseEvent<HTMLButtonElement>) => {
+		// Open popover
+		setAnchorEl(event.currentTarget)
+
+		// Build the url
+		let url = 'https://localhost:7278/api/Tasks/Excel'
+		if (search ?? status ?? userId) {
+			url += '?'
+			if (search) url += `search=${search}&`
+			if (status) url += `status=${status}&`
+			if (userId) url += `userId=${userId}&`
+			url = url.substring(0, url.length - 1)
+		}
+
+		// Fetch and download the excel
+		fetch(url, { method: 'GET' })
+			.then((res) => res.blob())
+			.then((blob) => {
+                // Download excel file
+				const url = window.URL.createObjectURL(new Blob([blob]))
+				const a = document.createElement('a')
+				a.href = url
+				a.download = 'protasker.xlsx'
+				document.body.appendChild(a)
+				a.click()
+				document.body.removeChild(a)
+
+				// close popover
+				setAnchorEl(null)
+			})
+			.catch((e) => console.error(e))
+	}
+
+	// SVG Icon
+	const ExcelIcon = createSvgIcon(
+		<svg
+			version="1.0"
+			xmlns="http://www.w3.org/2000/svg"
+			width="512.000000pt"
+			height="512.000000pt"
+			viewBox="0 0 512.000000 512.000000"
+			preserveAspectRatio="xMidYMid meet">
+			<g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
+				<path
+					d="M2665 4948 c-27 -5 -615 -115 -1305 -244 -1342 -251 -1296 -241
 -1337 -309 -17 -29 -18 -98 -18 -1835 0 -1737 1 -1806 18 -1835 42 -69 -10
 -57 1388 -319 1001 -188 1313 -243 1340 -237 48 11 77 31 102 71 22 35 22 38
 25 618 l3 582 237 0 c130 0 255 5 276 10 80 18 134 105 116 187 -11 48 -66
@@ -30,39 +73,65 @@ l-238 0 0 160 0 160 238 0 c130 0 255 5 276 10 50 11 105 65 116 113 18 82
 67 264 398 108 140 200 260 202 267 3 7 -94 126 -216 264 -121 139 -227 265
 -235 281 -70 136 100 292 226 207 19 -12 123 -124 231 -247 109 -124 202 -225
 207 -225 6 0 110 128 231 285 122 157 231 296 243 309 59 65 145 81 208 38z"
-                />
-                <path
-                    d="M3961 3670 c-18 -4 -49 -23 -68 -42 -62 -62 -62 -153 0 -215 45 -45
+				/>
+				<path
+					d="M3961 3670 c-18 -4 -49 -23 -68 -42 -62 -62 -62 -153 0 -215 45 -45
 82 -53 267 -53 185 0 222 8 267 53 85 84 43 230 -73 257 -47 11 -346 11 -393
 0z"
-                />
-                <path
-                    d="M3961 3030 c-18 -4 -49 -23 -68 -42 -62 -62 -62 -153 0 -215 45 -45
+				/>
+				<path
+					d="M3961 3030 c-18 -4 -49 -23 -68 -42 -62 -62 -62 -153 0 -215 45 -45
 82 -53 267 -53 185 0 222 8 267 53 85 84 43 230 -73 257 -47 11 -346 11 -393
 0z"
-                />
-                <path
-                    d="M3961 2390 c-45 -11 -100 -68 -111 -113 -18 -82 36 -169 116 -187 51
+				/>
+				<path
+					d="M3961 2390 c-45 -11 -100 -68 -111 -113 -18 -82 36 -169 116 -187 51
 -12 337 -12 388 0 80 18 134 105 116 187 -11 48 -66 102 -116 113 -47 11 -346
 11 -393 0z"
-                />
-                <path
-                    d="M3961 1750 c-45 -11 -100 -68 -111 -113 -18 -82 36 -169 116 -187 51
+				/>
+				<path
+					d="M3961 1750 c-45 -11 -100 -68 -111 -113 -18 -82 36 -169 116 -187 51
 -12 337 -12 388 0 80 18 134 105 116 187 -11 48 -66 102 -116 113 -47 11 -346
 11 -393 0z"
-                />
-            </g>
-        </svg>,
-        'Excel'
-    )
+				/>
+			</g>
+		</svg>,
+		'Excel'
+	)
 
-    return (
-        <>
-            <IconButton onClick={(e) => console.log(tasks)}>
-                <ExcelIcon sx={{color: colors.green[600]}}/>
-            </IconButton>
-        </>
-    )
+	const open = Boolean(anchorEl)
+	const id = open ? 'excel-loader-popover' : undefined
+
+	return (
+		<>
+			<IconButton onClick={handleExcel}>
+				<ExcelIcon sx={{ color: colors.green[600] }} />
+			</IconButton>
+
+			<Popover
+				id={id}
+				open={open}
+				anchorEl={anchorEl}
+				anchorOrigin={{
+					vertical: 'bottom',
+					horizontal: 'right',
+				}}
+				transformOrigin={{
+					vertical: 'top',
+					horizontal: 'right',
+				}}>
+				<Box
+					width={300}
+					p={3}
+					display={'flex'}
+					flexDirection={'column'}
+					gap={3}
+					border={'2px solid' + colors.grey[600]}>
+					<LoaderComponent />
+				</Box>
+			</Popover>
+		</>
+	)
 }
 
 export default ExcelTasks
