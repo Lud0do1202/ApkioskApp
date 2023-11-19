@@ -1,114 +1,149 @@
-import React, {useEffect, useState} from 'react'
-import {Box} from '@mui/material'
-import {Task} from '../models/Task'
+import React, { useEffect, useState } from 'react'
+import { Box } from '@mui/material'
+import { Task } from '../models/Task'
 import NoTasksAvailable from './NoTasksAvailable'
 import TaskTableContainer from './TaskTableContainer'
 import Loader from './LoaderPage'
-import {TasksMock} from '../MOCK/TasksMock'
-import {CrudTasks} from '../models/CrudTasks'
 import AddTaskButton from './AddTaskButton'
 import SearchTasks from './SearchTasks'
 import FilterTasks from './FilterTasks'
-import {TaskStatus} from '../models/TaskStatus'
+import { TaskStatus } from '../models/TaskStatus'
 import ExcelTasks from './ExcelTasks'
+import { TaskEdit } from '../models/TaskEdit'
+import { Consumer, Consumer2 } from '../models/Consumer'
+import { User } from '../models/User'
 
 const TasksTable: React.FC = () => {
-    // The tasks
-    const [tasks, setTasks] = useState<Task[] | undefined>(undefined)
-    const [tasksUI, setTasksUI] = useState<Task[]>([])
+	// The tasks
+	const [tasks, setTasks] = useState<Task[] | undefined>(undefined)
+	const [tasksUI, setTasksUI] = useState<Task[]>([])
 
-    // INIT
-    useEffect(() => {
-        // Simulate api request
-        setTimeout(() => {
-            setTasks(TasksMock)
-            setTasksUI(filterTasks(TasksMock))
-        }, 100)
-    }, [])
+	// INIT
+	useEffect(() => {
+		fetch('https://localhost:7278/api/Tasks', { method: 'GET' })
+			.then((res) => res.json())
+			.then((tasksApi: Task[]) => {
+				setTasks(tasksApi)
+				setTasksUI(filterTasks(tasksApi))
+			})
+			.catch((e) => console.error(e))
+	}, [])
 
-    // Crud tasks
-    const crudTask: CrudTasks = (type, task) => {
-        let newTasks: Task[] = []
-        switch (type) {
-            case 'create':
-                newTasks = tasks!.concat(task)
-                break
-            case 'update':
-                newTasks = tasks!.map((t) => (t.id === task.id ? task : t))
-                break
-            case 'delete':
-                newTasks = tasks!.filter((t) => t.id !== task.id)
-                break
-            default:
-                throw new Error('Method CRUD not allowed')
-        }
-        setTasks(newTasks)
-        setTasksUI(filterTasks(newTasks, filterSearch, filterUserId, filterStatus))
-    }
+	// Create task
+	const handleCreateTask: Consumer<TaskEdit> = (taskEdit) => {
+		fetch('https://localhost:7278/api/Tasks', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(taskEdit),
+		})
+			.then((res) => res.json())
+			.then((tasksInserted: Task) => {
+				const newTasksArray = tasks!.concat(tasksInserted)
+				setTasks(newTasksArray)
+				setTasksUI(filterTasks(newTasksArray, filterSearch, filterUserId, filterStatus))
+			})
+			.catch((e) => console.error(e))
+	}
 
-    // Filter
-    const filterTasks = (tasks: Task[], label?: string, userId?: number, status?: TaskStatus) => {
-        let tasksFiltered: Task[]
+	// Update task
+	const handleUpdateTask: Consumer2<TaskEdit, User | null> = (taskEdit, user) => {
+		fetch(`https://localhost:7278/api/Tasks/${taskEdit.id}`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(taskEdit),
+		})
+			.then(() => {
+				const taskUpdated: Task = {
+					id: taskEdit.id,
+					label: taskEdit.label,
+					status: taskEdit.status,
+					user: user,
+				}
+				const newTasksArray = tasks!.map((task) => (task.id === taskUpdated.id ? taskUpdated : task))
+				setTasks(newTasksArray)
+				setTasksUI(filterTasks(newTasksArray, filterSearch, filterUserId, filterStatus))
+			})
+			.catch((e) => console.error(e))
+	}
 
-        // Search
-        tasksFiltered = label === undefined ? tasks : tasks.filter((task) => task.label.includes(label))
+	// Delete task
+	const handleDeleteTask: Consumer<number> = (taskId) => {
+		fetch(`https://localhost:7278/api/Tasks/${taskId}`, { method: 'DELETE' })
+			.then(() => {
+				const newTasksArray = tasks!.filter((task) => task.id !== taskId)
+				setTasks(newTasksArray)
+				setTasksUI(filterTasks(newTasksArray, filterSearch, filterUserId, filterStatus))
+			})
+			.catch((e) => console.error(e))
+	}
 
-        // UserId
-        tasksFiltered =
-            userId === undefined
-                ? tasksFiltered
-                : tasksFiltered.filter((task) => (userId === 0 && task.user === null) || task.user?.id === userId)
+	// Filter
+	const filterTasks = (tasks: Task[], label?: string, userId?: number, status?: TaskStatus) => {
+		let tasksFiltered: Task[]
 
-        // UserId
-        tasksFiltered = status === undefined ? tasksFiltered : tasksFiltered.filter((task) => task.status === status)
+		// Search
+		tasksFiltered = label === undefined ? tasks : tasks.filter((task) => task.label.includes(label))
 
-        // Order
-        tasksFiltered = tasksFiltered.sort((t1, t2) => t1.label.localeCompare(t2.label))
+		// UserId
+		tasksFiltered =
+			userId === undefined
+				? tasksFiltered
+				: tasksFiltered.filter((task) => (userId === 0 && task.user === null) || task.user?.id === userId)
 
-        return tasksFiltered
-    }
+		// UserId
+		tasksFiltered = status === undefined ? tasksFiltered : tasksFiltered.filter((task) => task.status === status)
 
-    // Search bar
-    const [filterSearch, setFilterSearch] = useState<string | undefined>(undefined)
-    const handleSearchChange = (search: string) => {
-        setFilterSearch(search)
-        setTasksUI(filterTasks(tasks!, search, filterUserId, filterStatus))
-    }
+		// Order
+		tasksFiltered = tasksFiltered.sort((t1, t2) => t1.label.localeCompare(t2.label))
 
-    // User + Status
-    const [filterUserId, setFilterUserId] = useState<number | undefined>(undefined)
-    const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
-    const handleFilterChange = (userId?: number, status?: TaskStatus) => {
-        setFilterUserId(userId)
-        setFilterStatus(status)
-        setTasksUI(filterTasks(tasks!, filterSearch, userId, status))
-    }
+		return tasksFiltered
+	}
 
-    return (
-        <Box mt={3} mx={5}>
-            {tasks === undefined ? (
-                <Loader/>
-            ) : (
-                <>
-                    {/* Top bar of table */}
-                    <Box display={'flex'} justifyContent={'space-between'}>
-                        <AddTaskButton task={undefined} crudTasks={crudTask}/>
-                        <Box display={'flex'} gap={2}>
-                            <SearchTasks handleSearchChange={handleSearchChange}/>
-                            <ExcelTasks tasks={tasks}/>
-                            <FilterTasks handleFilterChange={handleFilterChange}/>
-                        </Box>
-                    </Box>
+	// Search bar
+	const [filterSearch, setFilterSearch] = useState<string | undefined>(undefined)
+	const handleSearchChange = (search: string) => {
+		setFilterSearch(search)
+		setTasksUI(filterTasks(tasks!, search, filterUserId, filterStatus))
+	}
 
-                    {/* Table */}
-                    {tasks.length === 0 ? (
-                        <NoTasksAvailable/>
-                    ) : (
-                        <TaskTableContainer tasks={tasksUI} crudTasks={crudTask}></TaskTableContainer>
-                    )}
-                </>
-            )}
-        </Box>
-    )
+	// User + Status
+	const [filterUserId, setFilterUserId] = useState<number | undefined>(undefined)
+	const [filterStatus, setFilterStatus] = useState<number | undefined>(undefined)
+	const handleFilterChange = (userId?: number, status?: TaskStatus) => {
+		setFilterUserId(userId)
+		setFilterStatus(status)
+		setTasksUI(filterTasks(tasks!, filterSearch, userId, status))
+	}
+
+	return (
+		<Box mt={3} mx={5}>
+			{tasks === undefined ? (
+				<Loader />
+			) : (
+				<>
+					{/* Top bar of table */}
+					<Box display={'flex'} justifyContent={'space-between'}>
+						<AddTaskButton handleCreateTask={handleCreateTask} />
+						<Box display={'flex'} gap={2}>
+							<SearchTasks handleSearchChange={handleSearchChange} />
+							<ExcelTasks tasks={tasks} />
+							<FilterTasks handleFilterChange={handleFilterChange} />
+						</Box>
+					</Box>
+
+					{/* Table */}
+					{tasks.length === 0 ? (
+						<NoTasksAvailable />
+					) : (
+						<TaskTableContainer
+							tasks={tasksUI}
+							handleUpdateTask={handleUpdateTask}
+							handleDeleteTask={handleDeleteTask}
+						/>
+					)}
+				</>
+			)}
+		</Box>
+	)
 }
 export default TasksTable
