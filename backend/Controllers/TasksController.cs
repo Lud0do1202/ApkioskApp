@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
+using OfficeOpenXml;
 
 namespace backend.Controllers
 {
@@ -31,6 +32,55 @@ namespace backend.Controllers
             }
             return await _context.Task.Include(x => x.User).ToListAsync();
         }
+
+        // Excel
+        [HttpGet("Excel")]
+        public async Task<ActionResult> ExcelTask(string? search, byte? status, int? userId)
+        {
+            // Get tasks
+            List<Models.Task> tasks = await _context.Task
+                .Include(x => x.User)
+                .Where(t => (search == null || t.Label.Contains(search)) &&
+                            (status == null || t.Status == status) &&
+                            (userId == null || t.UserId == userId))
+                .OrderBy(t => t.Label)
+                .ToListAsync();
+
+
+            // Create excel file
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using var package = new ExcelPackage();
+
+            // Sheet
+            ExcelWorksheet sheet = package.Workbook.Worksheets.Add("tasks");
+
+            // Headers
+            sheet.Cells[1, 1].Value = "Libellé de la tâche";
+            sheet.Cells[1, 2].Value = "Attribution";
+            sheet.Cells[1, 3].Value = "Status";
+
+            // Complete sheet
+            int recordIndex = 2;
+            foreach (Models.Task task in tasks)
+            {
+                sheet.Cells[recordIndex, 1].Value = task.Label;
+                sheet.Cells[recordIndex, 2].Value = $"{task.User?.Lastname} {task.User?.Firstname}" ?? "null";
+                sheet.Cells[recordIndex, 3].Value = GetStatusText(task.Status);
+                recordIndex++;
+            }
+
+            // Autofit
+            sheet.Column(1).AutoFit();
+            sheet.Column(2).AutoFit();
+            sheet.Column(3).AutoFit();
+
+            package.SaveAs("Exports/tasks.xlsx");
+            string filePath = package.File.FullName;
+            string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            return PhysicalFile(filePath, contentType, package.File.Name);
+        }
+
+        private static string GetStatusText(byte status) => status == 0 ? "En cours" : (status == 1) ? "Bloqué" : "Terminé";
 
         // PUT: api/Tasks/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -60,7 +110,7 @@ namespace backend.Controllers
             {
                 Id = taskEdit.Id,
                 Label = taskEdit.Label,
-                Status = (byte) taskEdit.Status,
+                Status = (byte)taskEdit.Status,
                 UserId = user?.Id,
                 User = user,
             };
@@ -124,6 +174,7 @@ namespace backend.Controllers
 
             return CreatedAtAction("GetTask", new { id = task.Id }, task);
         }
+
 
         // DELETE: api/Tasks/5
         [HttpDelete("{id}")]
