@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using backend.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend.Models
 {
-    public class Task
+    public class TaskEdit
     {
         /// <summary>
         /// The id of a tasks
@@ -15,16 +16,12 @@ namespace backend.Models
         /// <summary>
         /// The label of the task
         /// </summary>
-        [Required, MaxLength(255)]
-        public string Label { get; set; } = string.Empty;
+        [MaxLength(255)]
+        public string? Label { get; set; } = string.Empty;
         /// <summary>
         /// The status of the task (0 = In progress, 1 = Blocked, 2 = Completed)
         /// </summary>
         [Range(0, 2, ErrorMessage = "Status must be between 0 and 2.")]
-        public byte Status { get; set; }
-        /// <summary>
-        /// Ref of UserId
-        /// </summary>
-        public User? User { get; set; }
+        public byte? Status { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace backend.Data
 {
     public class ApkioskContext : DbContext
     {
-        public ApkioskContext (DbContextOptions<ApkioskContext> options)
+        public ApkioskContext(DbContextOptions<ApkioskContext> options)
             : base(options)
         {
         }

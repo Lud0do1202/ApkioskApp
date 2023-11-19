@@ -25,40 +25,46 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Models.Task>>> GetTask()
         {
-          if (_context.Task == null)
-          {
-              return NotFound();
-          }
-            return await _context.Task.ToListAsync();
-        }
-
-        // GET: api/Tasks/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Models.Task>> GetTask(int id)
-        {
-          if (_context.Task == null)
-          {
-              return NotFound();
-          }
-            var task = await _context.Task.FindAsync(id);
-
-            if (task == null)
+            if (_context.Task == null)
             {
                 return NotFound();
             }
-
-            return task;
+            return await _context.Task.Include(x => x.User).ToListAsync();
         }
 
         // PUT: api/Tasks/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTask(int id, Models.Task task)
+        public async Task<IActionResult> PutTask(int id, Models.TaskEdit taskEdit)
         {
-            if (id != task.Id)
+            if (id != taskEdit.Id)
             {
                 return BadRequest();
             }
+
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'ApkioskContext.User'  is null.");
+            }
+
+
+            // Get user from taskEdit.UserId
+            User? user = await _context.User.FindAsync(taskEdit.UserId);
+
+            // Set default values
+            taskEdit.Label = taskEdit.Label == null || taskEdit.Label.Equals(string.Empty) ? "0" : taskEdit.Label;
+            taskEdit.Status ??= 0;
+
+            // Create the task
+            Models.Task task = new()
+            {
+                Id = taskEdit.Id,
+                Label = taskEdit.Label,
+                Status = (byte) taskEdit.Status,
+                UserId = user?.Id,
+                User = user,
+            };
+
 
             _context.Entry(task).State = EntityState.Modified;
 
@@ -84,12 +90,35 @@ namespace backend.Controllers
         // POST: api/Tasks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Models.Task>> PostTask(Models.Task task)
+        public async Task<ActionResult<Models.Task>> PostTask(Models.TaskEdit taskEdit)
         {
-          if (_context.Task == null)
-          {
-              return Problem("Entity set 'ApkioskContext.Task'  is null.");
-          }
+            if (_context.Task == null)
+            {
+                return Problem("Entity set 'ApkioskContext.Task'  is null.");
+            }
+
+            if (_context.User == null)
+            {
+                return Problem("Entity set 'ApkioskContext.User'  is null.");
+            }
+
+            // Get user from taskEdit.UserId
+            User? user = await _context.User.FindAsync(taskEdit.UserId);
+
+            // Set default values
+            taskEdit.Label = taskEdit.Label == null || taskEdit.Label.Equals(string.Empty) ? "0" : taskEdit.Label;
+            taskEdit.Status ??= 0;
+
+            // Create the task
+            Models.Task task = new()
+            {
+                Id = taskEdit.Id,
+                Label = taskEdit.Label,
+                Status = (byte)taskEdit.Status,
+                UserId = user?.Id,
+                User = user,
+            };
+
             _context.Task.Add(task);
             await _context.SaveChangesAsync();
 

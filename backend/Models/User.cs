@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace backend.Models
 {
@@ -27,7 +28,8 @@ namespace backend.Models
         /// <summary>
         /// The tasks of a user
         /// </summary>
-        public ICollection<Task> Tasks { get; set; } = new List<Models.Task>();
+        [JsonIgnore]
+        public ICollection<Models.Task> Tasks { get; set; } = new List<Models.Task>();
 
         /// <summary>
         /// Empty Contructor
