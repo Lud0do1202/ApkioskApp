@@ -10,6 +10,7 @@ export type TaskStatusText = {
 }
 
 // Define the status values with corresponding text
+// eslint-disable-next-line
 export const TaskStatusText: TaskStatusText = {
     [TaskStatus.InProgress]: 'En cours',
     [TaskStatus.Blocked]: 'Bloqué',

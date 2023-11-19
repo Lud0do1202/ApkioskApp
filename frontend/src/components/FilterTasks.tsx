@@ -3,7 +3,6 @@ import { Box, Button, colors, IconButton, MenuItem, Popover, TextField } from '@
 import FilterAltIcon from '@mui/icons-material/FilterAlt'
 import { User } from '../models/User'
 import { allTaskStatus, TaskStatus } from '../models/TaskStatus'
-import { USERS } from '../MOCK/UsersMock'
 import LoaderComponent from './LoaderComponent'
 import ChipStatus from './ChipStatus'
 
