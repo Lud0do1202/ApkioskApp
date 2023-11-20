@@ -38,11 +38,12 @@ namespace backend.Controllers
         public async Task<ActionResult> ExcelTask(string? search, byte? status, int? userId)
         {
             // Get tasks
-            List<Models.Task> tasks = await _context.Task
-                .Include(x => x.User)
-                .Where(t => (search == null || t.Label.Contains(search)) &&
-                            (status == null || t.Status == status) &&
-                            (userId == null || t.UserId == userId))
+            var tasks = await _context.Task.Include(x => x.User)
+                .Where(t => 
+                    (search == null || t.Label.Contains(search)) &&
+                    (status == null || t.Status == status) &&
+                    (userId == null || t.UserId == userId)
+                )
                 .OrderBy(t => t.Label)
                 .ToListAsync();
 
@@ -64,7 +65,7 @@ namespace backend.Controllers
             foreach (Models.Task task in tasks)
             {
                 sheet.Cells[recordIndex, 1].Value = task.Label;
-                sheet.Cells[recordIndex, 2].Value = task.User == null ? $"{task.User?.Lastname} {task.User?.Firstname}" : "null";
+                sheet.Cells[recordIndex, 2].Value = task.User == null ? "null" : $"{task.User?.Lastname} {task.User?.Firstname}";
                 sheet.Cells[recordIndex, 3].Value = GetStatusText(task.Status);
                 recordIndex++;
             }

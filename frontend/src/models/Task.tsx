@@ -1,10 +1,10 @@
-import { TaskStatus } from './TaskStatus'
-import { User } from './User'
+import {TaskStatus} from './TaskStatus'
+import {User} from './User'
 
 export interface Task {
-	id: number
-	user: User | null
-	label: string
-	status: TaskStatus
-	completedDate: Date | null
+    id: number
+    user: User | null
+    label: string
+    status: TaskStatus
+    completedDate: Date | null
 }
