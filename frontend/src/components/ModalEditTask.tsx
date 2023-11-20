@@ -1,221 +1,228 @@
-import React, { useState } from 'react'
-import { Task } from '../models/Task'
-import { User } from '../models/User'
-import { allTaskStatus, TaskStatus } from '../models/TaskStatus'
-import { Box, Button, colors, Container, MenuItem, Modal, Paper, TextField } from '@mui/material'
+import React, {useRef, useState} from 'react'
+import {Task} from '../models/Task'
+import {User} from '../models/User'
+import {allTaskStatus, TaskStatus} from '../models/TaskStatus'
+import {Box, Button, colors, Container, MenuItem, Modal, Paper, TextField} from '@mui/material'
 import ChipStatus from './ChipStatus'
 import LoaderComponent from './LoaderComponent'
 import ModalHeader from './ModalHeader'
-import { HandleOpenModalRef } from '../models/HandleOpenModalRef'
-import { TaskEdit } from '../models/TaskEdit'
-import { Consumer, Consumer2 } from '../models/Consumer'
+import {TaskEdit} from '../models/TaskEdit'
+import {Consumer} from '../models/Consumer'
+import {HandleOpenRef} from '../models/HandelOpenRef'
+import ErrorSnackbar from './ErrorSnackbar'
 
 const ModalEditTask = React.forwardRef<
-	HandleOpenModalRef,
-	{
-		task: Task | undefined
-		handleCreateTask?: Consumer<TaskEdit>
-		handleUpdateTask?: Consumer2<TaskEdit, User | null>
-	}
+    HandleOpenRef,
+    {
+        task: Task | undefined
+        handleCreateTask?: Consumer<TaskEdit>
+        handleUpdateTask?: Consumer<TaskEdit>
+    }
 >((props, ref) => {
-	// Get props
-	const { task, handleCreateTask, handleUpdateTask } = props
+    // Get props
+    const {task, handleCreateTask, handleUpdateTask} = props
 
-	// If it's a create task
-	const isCrudCreate = task === undefined
+    // If it's a create task
+    const isCrudCreate = task === undefined
 
-	// Open modal from parent
-	React.useImperativeHandle(ref, () => ({
-		handleOpen() {
-			// Open modal
-			setOpen(true)
+    // Ref Error snackbar
+    const errorSnackbarRef = useRef<HandleOpenRef>(null)
 
-			// Fetch users
-			fetch('https://localhost:7278/api/Users', { method: 'GET' })
-				.then((res) => res.json())
-				.then((usersApi: User[]) => {
-					setUsers(usersApi)
-				})
-				.catch((e) => console.error(e))
-		},
-	}))
+    // Open modal from parent
+    React.useImperativeHandle(ref, () => ({
+        handleOpen() {
+            // Open modal
+            setOpen(true)
 
-	// Remote vars
-	const [users, setUsers] = useState<User[] | undefined>(undefined)
+            // Fetch users
+            fetch('https://localhost:7278/api/Users', {method: 'GET'})
+                .then((res) => res.json())
+                .then((usersApi: User[]) => {
+                    setUsers(usersApi)
+                })
+                .catch((_) => errorSnackbarRef.current?.handleOpen())
+        },
+    }))
 
-	// Modal
-	const [open, setOpen] = useState(false)
+    // Remote vars
+    const [users, setUsers] = useState<User[] | undefined>(undefined)
 
-	const handleClose = () => {
-		// Reset all users (save memory)
-		setUsers(undefined)
+    // Modal
+    const [open, setOpen] = useState(false)
 
-		// Reset form
-		resetForm()
+    const handleClose = () => {
+        // Reset all users (save memory)
+        setUsers(undefined)
 
-		// Close modal
-		setOpen(false)
-	}
+        // Reset form
+        resetForm()
 
-	// Form
-	const [label, setLabel] = useState<string | undefined>(task?.label)
-	const [status, setStatus] = useState<TaskStatus | undefined>(task?.status)
-	const [userId, setUserId] = useState<number | undefined>(task?.user?.id)
+        // Close modal
+        setOpen(false)
+    }
 
-	// Errors
-	const [errorLabel, setErrorLabel] = useState<string | undefined>(undefined)
-	const [errorStatus, setErrorStatus] = useState<string | undefined>(undefined)
+    // Form
+    const [label, setLabel] = useState<string | undefined>(task?.label)
+    const [status, setStatus] = useState<TaskStatus | undefined>(task?.status)
+    const [userId, setUserId] = useState<number | undefined>(task?.user?.id)
 
-	// Reset form
-	const resetForm = () => {
-		setLabel(task?.label)
-		setStatus(task?.status)
-		setUserId(task?.user?.id)
-		setErrorLabel(undefined)
-		setErrorStatus(undefined)
-	}
+    // Errors
+    const [errorLabel, setErrorLabel] = useState<string | undefined>(undefined)
+    const [errorStatus, setErrorStatus] = useState<string | undefined>(undefined)
 
-	// Submit form
-	const submit: React.FormEventHandler<HTMLFormElement> = (event) => {
-		// Prevent default submit event
-		event.preventDefault()
+    // Reset form
+    const resetForm = () => {
+        setLabel(task?.label)
+        setStatus(task?.status)
+        setUserId(task?.user?.id)
+        setErrorLabel(undefined)
+        setErrorStatus(undefined)
+    }
 
-		// Has error
-		let hasError = false
+    // Submit form
+    const submit: React.FormEventHandler<HTMLFormElement> = (event) => {
+        // Prevent default submit event
+        event.preventDefault()
 
-		// Check label
-		if (label === undefined || label.trim() === '') {
-			hasError = true
-			setErrorLabel('Champ obligatoire')
-		} else if (label.length > 255) {
-			hasError = true
-			setErrorLabel('Max 255 caractères')
-		} else {
-			setErrorLabel(undefined)
-		}
+        // Has error
+        let hasError = false
 
-		// Check status
-		if (status === undefined) {
-			hasError = true
-			setErrorStatus('Champ obligatoire')
-		} else {
-			setErrorStatus(undefined)
-		}
+        // Check label
+        if (label === undefined || label.trim() === '') {
+            hasError = true
+            setErrorLabel('Champ obligatoire')
+        } else if (label.length > 255) {
+            hasError = true
+            setErrorLabel('Max 255 caractères')
+        } else {
+            setErrorLabel(undefined)
+        }
 
-		// ERROR
-		if (hasError) return
+        // Check status
+        if (status === undefined) {
+            hasError = true
+            setErrorStatus('Champ obligatoire')
+        } else {
+            setErrorStatus(undefined)
+        }
 
-		// Create a task
-		if (isCrudCreate) {
-			handleCreateTask!({
-				id: 0,
-				label: label!,
-				status: status!,
-				userId: userId === undefined || userId === -1 ? null : userId,
-			})
-		}
+        // ERROR
+        if (hasError) return
 
-		// Update a task
-		else {
-			handleUpdateTask!({
-				id: task.id,
-				label: label!,
-				status: status!,
-				userId: userId === undefined || userId === -1 ? null : userId,
-			}, users?.find(user => user.id === userId) ?? null)
-		}
+        // Create a task
+        if (isCrudCreate) {
+            handleCreateTask!({
+                id: 0,
+                label: label!,
+                status: status!,
+                userId: userId === undefined || userId === -1 ? null : userId,
+            })
+        }
 
-		// Close modal
-		handleClose()
-	}
+        // Update a task
+        else {
+            handleUpdateTask!({
+                id: task.id,
+                label: label!,
+                status: status!,
+                userId: userId === undefined || userId === -1 ? null : userId,
+            })
+        }
 
-	return (
-		<Modal open={open} onClose={handleClose}>
-			<Container maxWidth={'sm'}>
-				<Box p={2} component={Paper} elevation={12}>
-					{users === undefined ? (
-						<LoaderComponent />
-					) : (
-						<>
-							{/* FORM */}
-							<form onSubmit={submit} noValidate>
-								{/* Header */}
-								<ModalHeader
-									text={isCrudCreate ? 'Nouvelle tâche' : "Modification d'une tâche"}
-									handleClose={handleClose}
-								/>
+        // Close modal
+        handleClose()
+    }
 
-								{/* Body */}
-								<Box display={'flex'} flexDirection={'column'} gap={3}>
-									<TextField
-										id="label"
-										error={errorLabel !== undefined}
-										helperText={errorLabel}
-										label="Libellé de la tâche"
-										required
-										value={label ?? ''}
-										onChange={(e) => setLabel(e.target.value)}
-										size="small"
-									/>
+    return (
+        <>
+            <ErrorSnackbar ref={errorSnackbarRef}/>
+            <Modal open={open} onClose={handleClose}>
+                <Container maxWidth={'sm'}>
+                    <Box p={2} component={Paper} elevation={12}>
+                        {users === undefined ? (
+                            <LoaderComponent/>
+                        ) : (
+                            <>
+                                {/* FORM */}
+                                <form onSubmit={submit} noValidate>
+                                    {/* Header */}
+                                    <ModalHeader
+                                        text={isCrudCreate ? 'Nouvelle tâche' : "Modification d'une tâche"}
+                                        handleClose={handleClose}
+                                    />
 
-									<TextField
-										id="attribution"
-										select
-										label="Attribution"
-										size="small"
-										value={userId ?? ''}
-										onChange={(e) => setUserId(Number.parseInt(e.target.value))}>
-										<MenuItem key={0} value={-1}>
-											-
-										</MenuItem>
-										{users?.map((user) => (
-											<MenuItem key={user.id} value={user.id}>
-												{user.lastname} {user.firstname}
-											</MenuItem>
-										))}
-									</TextField>
+                                    {/* Body */}
+                                    <Box display={'flex'} flexDirection={'column'} gap={3}>
+                                        <TextField
+                                            id="label"
+                                            error={errorLabel !== undefined}
+                                            helperText={errorLabel}
+                                            label="Libellé de la tâche"
+                                            required
+                                            value={label ?? ''}
+                                            onChange={(e) => setLabel(e.target.value)}
+                                            size="small"
+                                        />
 
-									<TextField
-										id="status"
-										select
-										error={errorStatus !== undefined}
-										helperText={errorStatus}
-										label="Status"
-										required
-										size="small"
-										value={status ?? ''}
-										onChange={(e) => setStatus(Number.parseInt(e.target.value))}>
-										{allTaskStatus.map((s) => (
-											<MenuItem key={s} value={s}>
-												<ChipStatus status={s} />
-											</MenuItem>
-										))}
-									</TextField>
-								</Box>
+                                        <TextField
+                                            id="attribution"
+                                            select
+                                            label="Attribution"
+                                            size="small"
+                                            value={userId ?? ''}
+                                            onChange={(e) => setUserId(Number.parseInt(e.target.value))}>
+                                            <MenuItem key={0} value={-1}>
+                                                -
+                                            </MenuItem>
+                                            {users?.map((user) => (
+                                                <MenuItem key={user.id} value={user.id}>
+                                                    {user.lastname} {user.firstname}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
 
-								{/* Footer */}
-								<Box
-									mt={4}
-									pt={2}
-									gap={2}
-									display={'flex'}
-									justifyContent={'end'}
-									alignContent={'center'}
-									color={colors.grey[500]}
-									sx={{ borderTop: '3px solid ' + colors.grey[400] }}>
-									<Button variant="text" color={'inherit'} onClick={handleClose}>
-										Annuler
-									</Button>
-									<Button type="submit" variant="contained" color={'primary'}>
-										{isCrudCreate ? 'Ajouter' : 'Modifier'}
-									</Button>
-								</Box>
-							</form>
-						</>
-					)}
-				</Box>
-			</Container>
-		</Modal>
-	)
+                                        <TextField
+                                            id="status"
+                                            select
+                                            error={errorStatus !== undefined}
+                                            helperText={errorStatus}
+                                            label="Status"
+                                            required
+                                            size="small"
+                                            value={status ?? ''}
+                                            onChange={(e) => setStatus(Number.parseInt(e.target.value))}>
+                                            {allTaskStatus.map((s) => (
+                                                <MenuItem key={s} value={s}>
+                                                    <ChipStatus status={s}/>
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Box>
+
+                                    {/* Footer */}
+                                    <Box
+                                        mt={4}
+                                        pt={2}
+                                        gap={2}
+                                        display={'flex'}
+                                        justifyContent={'end'}
+                                        alignContent={'center'}
+                                        color={colors.grey[500]}
+                                        sx={{borderTop: '3px solid ' + colors.grey[400]}}>
+                                        <Button variant="text" color={'inherit'} onClick={handleClose}>
+                                            Annuler
+                                        </Button>
+                                        <Button type="submit" variant="contained" color={'primary'}>
+                                            {isCrudCreate ? 'Ajouter' : 'Modifier'}
+                                        </Button>
+                                    </Box>
+                                </form>
+                            </>
+                        )}
+                    </Box>
+                </Container>
+            </Modal>
+        </>
+    )
 })
 export default ModalEditTask

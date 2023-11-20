@@ -1,4 +1,4 @@
-import { TaskStatus } from "./TaskStatus"
+import {TaskStatus} from "./TaskStatus"
 
 export interface TaskEdit {
     id: number

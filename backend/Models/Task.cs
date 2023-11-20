@@ -23,6 +23,10 @@ namespace backend.Models
         [Range(0, 2, ErrorMessage = "Status must be between 0 and 2.")]
         public byte Status { get; set; }
         /// <summary>
+        /// The date when a task is completed
+        /// </summary>
+        public DateTime? CompletedDate { get; set; }
+        /// <summary>
         /// Ref of UserId
         /// </summary>
         public User? User { get; set; }

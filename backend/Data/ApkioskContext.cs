@@ -26,7 +26,7 @@ namespace backend.Data
             modelBuilder.Entity<Models.Task>()
                 .HasOne(x => x.User)            // task     has 1..0    user
                 .WithMany(x => x.Tasks)         // user     has 0..*    tasks
-                .HasForeignKey(x => x.UserId);  // task     has FK on   UserId
+                .HasForeignKey(x => x.UserId);                  // task     has FK on   UserId
         }
     }
 }

@@ -6,4 +6,5 @@ export interface Task {
     user: User | null
     label: string
     status: TaskStatus
+    completedDate: Date | null
 }
