@@ -8,7 +8,7 @@ import { TaskStatus } from '../models/TaskStatus'
 const PieChartStatus: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
 	const theme = useTheme()
 
-  // Values
+	// Values
 	const nbTasksTot = tasks.length
 	const nbTasksBlocked = tasks.filter((t) => t.status === TaskStatus.Blocked).length
 	const nbTasksInProgress = tasks.filter((t) => t.status === TaskStatus.InProgress).length
@@ -16,22 +16,22 @@ const PieChartStatus: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
 
 	return (
 		<Box
+			className="hide-default-labels-chart"
 			width={'45%'}
 			border={'3px solid ' + colors.grey[400]}
 			borderRadius={2}
 			display={'flex'}
 			justifyContent={'space-around'}
 			alignItems={'center'}
-			py={4}
-			px={3}>
+			p={2}>
 			<PieChart
 				colors={[theme.palette.error.main, theme.palette.info.main, theme.palette.success.main]}
 				series={[
 					{
 						data: [
-							{ id: 0, value: nbTasksBlocked },
-							{ id: 1, value: nbTasksInProgress },
-							{ id: 2, value: nbTasksCompleted },
+							{ id: 0, value: nbTasksBlocked, label: 'Bloqué' },
+							{ id: 1, value: nbTasksInProgress, label: 'En cours' },
+							{ id: 2, value: nbTasksCompleted, label: 'Terminé' },
 						],
 						innerRadius: 50,
 						outerRadius: 100,

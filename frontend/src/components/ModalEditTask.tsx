@@ -15,7 +15,7 @@ const ModalEditTask = React.forwardRef<
 	{
 		task: Task | undefined
 		handleCreateTask?: Consumer<TaskEdit>
-		handleUpdateTask?: Consumer2<TaskEdit, User | null>
+		handleUpdateTask?: Consumer<TaskEdit>
 	}
 >((props, ref) => {
 	// Get props
@@ -122,7 +122,7 @@ const ModalEditTask = React.forwardRef<
 				label: label!,
 				status: status!,
 				userId: userId === undefined || userId === -1 ? null : userId,
-			}, users?.find(user => user.id === userId) ?? null)
+			})
 		}
 
 		// Close modal

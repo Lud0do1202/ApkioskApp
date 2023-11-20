@@ -24,7 +24,7 @@ import { User } from '../models/User'
 
 const TaskTableContainer: React.FC<{
 	tasks: Task[]
-	handleUpdateTask: Consumer2<TaskEdit, User | null>
+	handleUpdateTask: Consumer<TaskEdit>
 	handleDeleteTask: Consumer<number>
 }> = ({ tasks, handleUpdateTask, handleDeleteTask }) => {
 	// Current page of the table

@@ -64,7 +64,7 @@ namespace backend.Controllers
             foreach (Models.Task task in tasks)
             {
                 sheet.Cells[recordIndex, 1].Value = task.Label;
-                sheet.Cells[recordIndex, 2].Value = $"{task.User?.Lastname} {task.User?.Firstname}" ?? "null";
+                sheet.Cells[recordIndex, 2].Value = task.User == null ? $"{task.User?.Lastname} {task.User?.Firstname}" : "null";
                 sheet.Cells[recordIndex, 3].Value = GetStatusText(task.Status);
                 recordIndex++;
             }
@@ -80,12 +80,17 @@ namespace backend.Controllers
             return PhysicalFile(filePath, contentType, package.File.Name);
         }
 
-        private static string GetStatusText(byte status) => status == 0 ? "En cours" : (status == 1) ? "Bloqué" : "Terminé";
+        private static string GetStatusText(byte status) => status switch
+        {
+            0 => "En cours",
+            1 => "Bloqué",
+            _ => "Terminé"
+        };
 
         // PUT: api/Tasks/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTask(int id, Models.TaskEdit taskEdit)
+        public async Task<ActionResult<Models.Task>> PutTask(int id, Models.TaskEdit taskEdit)
         {
             if (id != taskEdit.Id)
             {
@@ -111,6 +116,7 @@ namespace backend.Controllers
                 Id = taskEdit.Id,
                 Label = taskEdit.Label,
                 Status = (byte)taskEdit.Status,
+                CompletedDate = taskEdit.Status == 2 ? DateTime.Today : null,
                 UserId = user?.Id,
                 User = user,
             };
@@ -134,7 +140,7 @@ namespace backend.Controllers
                 }
             }
 
-            return NoContent();
+            return Created("GetTask", task);
         }
 
         // POST: api/Tasks
@@ -165,6 +171,7 @@ namespace backend.Controllers
                 Id = taskEdit.Id,
                 Label = taskEdit.Label,
                 Status = (byte)taskEdit.Status,
+                CompletedDate = taskEdit.Status == 2 ? DateTime.Today : null,
                 UserId = user?.Id,
                 User = user,
             };

@@ -30,3 +30,8 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+/* Hide the lables of a chart */
+.hide-default-labels-chart .MuiChartsLegend-root {
+    display: none;
+}

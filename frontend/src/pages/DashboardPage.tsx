@@ -5,6 +5,8 @@ import { Task } from '../models/Task'
 import LoaderPage from '../components/LoaderPage'
 import BarCharTask from '../components/BarCharTask'
 import { User } from '../models/User'
+import LineChartCompletedTasks from '../components/LineChartCompletedTasks'
+import NoTasksAvailable from '../components/NoTasksAvailable'
 
 const DashboardPage: React.FC = () => {
 	// Fetch tasks
@@ -12,7 +14,14 @@ const DashboardPage: React.FC = () => {
 	useEffect(() => {
 		fetch('https://localhost:7278/api/Tasks', { method: 'GET' })
 			.then((res) => res.json())
-			.then((tasksApi: Task[]) => setTasks(tasksApi))
+			.then((tasksApi: Task[]) => {
+				setTasks(
+					tasksApi.map((t) => {
+						t.completedDate = t.completedDate === null ? null : new Date(t.completedDate)
+						return t;
+					})
+				)
+			})
 			.catch((e) => console.error(e))
 	}, [])
 
@@ -30,14 +39,21 @@ const DashboardPage: React.FC = () => {
 			{tasks === undefined || users === undefined ? (
 				<LoaderPage />
 			) : (
-				<Box component={Container} display={'flex'} flexDirection={'column'} gap={2} my={2}>
-					<Box display={'flex'} justifyContent={'space-around'}>
-						<BarCharTask tasks={tasks} users={users} />
-					</Box>
-					<Box display={'flex'} justifyContent={'space-around'}>
-						<PieChartStatus tasks={tasks} />
-					</Box>
-				</Box>
+				<>
+					{tasks.length === 0 ? (
+						<NoTasksAvailable />
+					) : (
+						<Box component={Container} display={'flex'} flexDirection={'column'} gap={2} my={2}>
+							<Box display={'flex'} justifyContent={'space-around'}>
+								<LineChartCompletedTasks tasks={tasks} users={users} />
+							</Box>
+							<Box display={'flex'} justifyContent={'space-around'}>
+								<PieChartStatus tasks={tasks} />
+								<BarCharTask tasks={tasks} users={users} />
+							</Box>
+						</Box>
+					)}
+				</>
 			)}
 		</>
 	)
