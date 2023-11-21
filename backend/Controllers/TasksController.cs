@@ -40,7 +40,7 @@ namespace backend.Controllers
             // Get tasks
             var tasks = await _context.Task.Include(x => x.User)
                 .Where(t => 
-                    (search == null || t.Label.Contains(search)) &&
+                    (search == null || t.Label.ToLower().Contains(search.ToLower())) &&
                     (status == null || t.Status == status) &&
                     (userId == null || t.UserId == userId)
                 )

@@ -90,7 +90,7 @@ const TasksTable: React.FC = () => {
         let tasksFiltered: Task[]
 
         // Search
-        tasksFiltered = label === undefined ? tasks : tasks.filter((task) => task.label.includes(label))
+        tasksFiltered = label === undefined ? tasks : tasks.filter((task) => task.label.toLowerCase().includes(label.toLowerCase()))
 
         // UserId
         tasksFiltered =
